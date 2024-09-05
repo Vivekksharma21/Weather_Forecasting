@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Forecast</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script>
+        function getWeather(event) {
+            event.preventDefault(); // Prevent form submission
+        
+            var city = document.querySelector('input[name="city"]').value;
+            var apiUrl = `weather.php?city=${encodeURIComponent(city)}`;
+        
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    let resultDiv = document.getElementById('result');
+                    
+                    if (data.cod === 200) {
+                        let temp = data.main ? data.main.temp : 'N/A';
+                        let desc = data.weather && data.weather.length > 0 ? data.weather[0].description : 'N/A';
+                        let icon = data.weather && data.weather.length > 0 ? data.weather[0].icon : '01d';
+                        let humidity = data.main ? data.main.humidity : 'N/A';
+                        let windSpeed = data.wind ? data.wind.speed : 'N/A';
+                        let cityName = city.charAt(0).toUpperCase() + city.slice(1); // Capitalize city name
+                        let suggestion = "";
+        
+                        if (desc.includes('rain') || humidity > 80) {
+                            suggestion = "It might rain today. Consider carrying an umbrella or a raincoat.";
+                        } else if (temp > 30) {
+                            suggestion = "It's quite hot outside. Stay hydrated and wear light clothing.";
+                        } else if (temp < 10) {
+                            suggestion = "It's quite cold outside. Wear warm clothing.";
+                        } else {
+                            suggestion = "The weather looks fine. Enjoy your day!";
+                        }
+        
+                        resultDiv.innerHTML = `
+                            <div class="weather-card">
+                                <h2>Weather in ${cityName}</h2>
+                                <img src="http://openweathermap.org/img/wn/${icon}@2x.png" alt="${desc}" class="weather-icon">
+                                <p class="temperature">${temp}°C</p>
+                                <p class="weather-description">${desc}</p>
+                                <p>Humidity: ${humidity}%</p>
+                                <p>Wind Speed: ${windSpeed} m/s</p>
+                                <p class="suggestion">${suggestion}</p>
+                            </div>`;
+                    } else {
+                        resultDiv.innerHTML = `<p class="error">${data.message}</p>`;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('result').innerHTML = `<p class="error">Error: ${error.message}</p>`;
+                });
+        }            
+    </script>
+</head>
+<body>
+    <div class="container" style="background: url('cloud.jpeg');">
+        <h1>Weather Forecast</h1>
+        <form class="weather-form" onsubmit="getWeather(event)">
+            <input type="text" name="city" placeholder="Enter City Name" required>
+            <button type="submit">Get Weather</button>
+        </form>
+        <div id="result">
+            <!-- Weather details will be displayed here -->
+        </div>
+    </div>
+</body>
+</html>
